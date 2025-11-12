@@ -1,0 +1,47 @@
+<div class="dashboard-container">
+  <div class="dashboard-card">
+    <div class="header">
+      <h2>Welcome to Dashboard</h2>
+      <button class="btn btn-logout" (click)="logout()">Logout</button>
+    </div>
+
+    <div *ngIf="currentUser" class="user-info">
+      <div class="info-card">
+        <div class="info-icon">👤</div>
+        <div class="info-content">
+          <h3>Username</h3>
+          <p>{{ currentUser.username }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🕐</div>
+        <div class="info-content">
+          <h3>Last Login Time</h3>
+          <p>{{ formatDate(currentUser.lastLoginTime) }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">📅</div>
+        <div class="info-content">
+          <h3>Account Created</h3>
+          <p>{{ formatDate(currentUser.createdAt) }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-icon">🔑</div>
+        <div class="info-content">
+          <h3>User ID</h3>
+          <p>{{ currentUser.id }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="welcome-message">
+      <h3>🎉 You're successfully logged in!</h3>
+      <p>This is your personal dashboard. Here you can see your account information.</p>
+    </div>
+  </div>
+</div>
