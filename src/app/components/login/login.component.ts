@@ -5,9 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
-selector: 'app-login',
-  standalone: true,
+  selector: 'app-login',
   imports: [FormsModule, CommonModule],
+  standalone: true,  // เพิ่มบรรทัดนี้
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -20,7 +20,7 @@ export class LoginComponent {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   onSubmit(): void {
     if (!this.username || !this.password) {

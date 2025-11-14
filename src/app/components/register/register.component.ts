@@ -5,9 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
-    selector: 'app-register',
-  standalone: true,
+  selector: 'app-register',
   imports: [FormsModule, CommonModule],
+  standalone: true,  // เพิ่มบรรทัดนี้
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
@@ -21,7 +21,7 @@ export class RegisterComponent {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   onSubmit(): void {
     // Validation

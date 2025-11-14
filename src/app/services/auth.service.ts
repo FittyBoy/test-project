@@ -1,6 +1,10 @@
-import { Injectable } from '@angular/core';
+// src/app/services/auth.service.ts
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { User, LoginResponse, RegisterResponse } from '../models/user.model';
+import { map } from 'rxjs/operators';
+import { User } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -8,14 +12,24 @@ import { User, LoginResponse, RegisterResponse } from '../models/user.model';
 export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
-  private readonly STORAGE_KEY = 'users';
-  private readonly CURRENT_USER_KEY = 'currentUser';
+  private apiUrl = 'https://localhost:7243/api';  // ⭐ เปลี่ยนเป็น port 243
+  private isBrowser: boolean;
 
-  constructor() {
-    const storedUser = localStorage.getItem(this.CURRENT_USER_KEY);
-    this.currentUserSubject = new BehaviorSubject<User | null>(
-      storedUser ? JSON.parse(storedUser) : null
-    );
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    
+    let storedUser: User | null = null;
+    if (this.isBrowser) {
+      const storedUserStr = localStorage.getItem('currentUser');
+      if (storedUserStr) {
+        storedUser = JSON.parse(storedUserStr);
+      }
+    }
+    
+    this.currentUserSubject = new BehaviorSubject<User | null>(storedUser);
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
@@ -23,91 +37,51 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  login(username: string, password: string): Observable<LoginResponse> {
-    return new Observable(observer => {
-      const users = this.getStoredUsers();
-      const user = users.find(
-        u => u.username === username && u.password === password
-      );
-
-      if (user) {
-        user.lastLoginTime = new Date();
-        this.updateUserInStorage(user);
-        localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
-        
-        observer.next({
-          success: true,
-          message: 'Login successful',
-          user: user
-        });
-      } else {
-        observer.next({
-          success: false,
-          message: 'Invalid username or password'
-        });
-      }
-      observer.complete();
-    });
+  login(username: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/login`, { username, password })
+      .pipe(map(response => {
+        // ปรับตาม response structure ของ backend คุณ
+        if (response && response.token && this.isBrowser) {
+          const user = {
+            id: response.userId || response.id,
+            username: username
+          };
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          localStorage.setItem('token', response.token);
+          this.currentUserSubject.next(user);
+          return { success: true, user: user, token: response.token };
+        }
+        return response;
+      }));
   }
 
-  register(username: string, password: string): Observable<RegisterResponse> {
-    return new Observable(observer => {
-      const users = this.getStoredUsers();
-      
-      // ตรวจสอบว่า username ซ้ำหรือไม่
-      if (users.some(u => u.username === username)) {
-        observer.next({
-          success: false,
-          message: 'Username already exists'
-        });
-        observer.complete();
-        return;
-      }
-
-      // สร้าง user ใหม่
-      const newUser: User = {
-        id: this.generateId(),
-        username: username,
-        password: password,
-        createdAt: new Date(),
-        lastLoginTime: new Date()
-      };
-
-      users.push(newUser);
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
-      localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(newUser));
-      this.currentUserSubject.next(newUser);
-
-      observer.next({
-        success: true,
-        message: 'Registration successful',
-        user: newUser
-      });
-      observer.complete();
-    });
+  register(username: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/register`, { username, password })
+      .pipe(map(response => {
+        // ปรับตาม response structure ของ backend คุณ
+        if (response && response.token && this.isBrowser) {
+          const user = {
+            id: response.userId || response.id,
+            username: username
+          };
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          localStorage.setItem('token', response.token);
+          this.currentUserSubject.next(user);
+          return { success: true, user: user, token: response.token };
+        }
+        return response;
+      }));
   }
 
   logout(): void {
-    localStorage.removeItem(this.CURRENT_USER_KEY);
+    if (this.isBrowser) {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('token');
+    }
     this.currentUserSubject.next(null);
   }
 
-  private getStoredUsers(): User[] {
-    const usersJson = localStorage.getItem(this.STORAGE_KEY);
-    return usersJson ? JSON.parse(usersJson) : [];
-  }
-
-  private updateUserInStorage(updatedUser: User): void {
-    const users = this.getStoredUsers();
-    const index = users.findIndex(u => u.id === updatedUser.id);
-    if (index !== -1) {
-      users[index] = updatedUser;
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
-    }
-  }
-
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  isAuthenticated(): boolean {
+    return this.currentUserValue !== null;
   }
 }

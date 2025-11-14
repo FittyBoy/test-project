@@ -11,7 +11,7 @@
           name="username"
           [(ngModel)]="username"
           class="form-control"
-          placeholder="Enter username"
+          placeholder="Enter your username"
           required
         />
       </div>
@@ -24,28 +24,30 @@
           name="password"
           [(ngModel)]="password"
           class="form-control"
-          placeholder="Enter password"
+          placeholder="Enter your password"
           required
         />
       </div>
 
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
-      </div>
+      @if (errorMessage) {
+        <div class="error-message">
+          {{ errorMessage }}
+        </div>
+      }
 
       <button
         type="submit"
         class="btn btn-primary"
         [disabled]="isLoading || !loginForm.valid"
       >
-        {{ isLoading ? 'Loading...' : 'Login' }}
+        {{ isLoading ? 'Logging in...' : 'Login' }}
       </button>
     </form>
 
     <div class="register-link">
       <p>Don't have an account?</p>
       <button class="btn btn-secondary" (click)="goToRegister()">
-        Register Now
+        Register Here
       </button>
     </div>
   </div>

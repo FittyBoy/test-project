@@ -1,19 +1,20 @@
 export interface User {
-  id?: string;
+  id: string;
   username: string;
-  password: string;
-  lastLoginTime?: Date;
+  lastLogin?: Date;  // ⭐ เพิ่มบรรทัดนี้
   createdAt?: Date;
 }
 
 export interface LoginResponse {
   success: boolean;
   message: string;
+  token?: string;
   user?: User;
 }
 
 export interface RegisterResponse {
   success: boolean;
   message: string;
+  token?: string;
   user?: User;
 }
